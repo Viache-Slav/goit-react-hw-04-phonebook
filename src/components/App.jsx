@@ -1,112 +1,81 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import ContactForm from './ContactForm/ContactForm';
 import ContactList from './ContactList/ContactList';
 import Filter from './Filter/Filter';
-// eslint-disable-next-line
 import css from './app.module.css';
 
-class App extends Component {
-  state = {
-    contacts: [
+const App = () => {
+  const [contacts, setContacts] = useState(() => {
+    const savedContacts = localStorage.getItem('contacts');
+    return savedContacts ? JSON.parse(savedContacts) : [
       { id: 'id-1', name: 'Andriy Shevchenko', number: '645-17-79' },
       { id: 'id-2', name: 'Vitali Klitschko', number: '658-25-63' },
       { id: 'id-3', name: 'Volodymyr Zelensky', number: '698-45-75' },
       { id: 'id-4', name: 'Vasyl Virastyuk', number: '158-35-61' },
-    ],
-    name: '',
-    number: '',
-    filter: '',
-  };
+    ];
+  });
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
+  const [filter, setFilter] = useState('');
 
-  // pobiera dane kontaktów z localStorage. 
-  // Jeżeli nie ma danych z kluczem "contacts", to wartość savedContacts będzie równa null.
-  componentDidMount() {
-    const savedContacts = localStorage.getItem('contacts');
-    if (savedContacts) {
-      // Przywraca kontakty z localStorage, jeżeli istnieją
-      this.setState({ contacts: JSON.parse(savedContacts) });
-    }
-  }
+  useEffect(() => {
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-  // Zapisywanie kontaktów w localStorage w przypadku jakichkolwiek zmian
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.contacts !== this.state.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  }
+  const handleAddContact = (newName, newNumber) => {
+    const existingContact = contacts.find(
+      (contact) => contact.name.toLowerCase() === newName.toLowerCase() || contact.number === newNumber
+    );
 
-  componentWillUnmount() {
-    // Można wyczyścić localStorage
-    // localStorage.removeItem('contacts');
-  }
-
-  handleAddContact = (name, number) => {
-    const { contacts } = this.state;
-    const contactNames = contacts.map((contact) => contact.name);
-    const contactNumbers = contacts.map((contact) => contact.number);
-
-    // Sprawdza, czy kontakt o danej nazwie już istnieje
-    if (contactNames.includes(name)) {
-      alert(`${name} is already in contacts`);
-      return;
-    }
-  
-    // Sprawdza, czy kontakt o danym numerze już istnieje
-    if (contactNumbers.includes(number)) {
-      alert(`${number} is already in contacts`);
+    if (existingContact) {
+      alert(`${newName} or ${newNumber} is already in contacts`);
       return;
     }
 
     const newContact = {
       id: nanoid(),
-      name,
-      number,
+      name: newName,
+      number: newNumber,
     };
 
-    // Dodaje nowy kontakt do stanu aplikacji
-    this.setState(prevState => ({
-      contacts: [...prevState.contacts, newContact],
-    }));
+    console.log('New contact:', newContact);
+
+    setContacts((prevContacts) => [...prevContacts, newContact]);
+    setName('');
+    setNumber('');
   };
 
-  // Aktualizuje stan filtra na podstawie wprowadzonych danych
-  handleFilterChange = (event) => {
-    const { name, value } = event.target;
-    this.setState({ [name]: value });
+  const handleFilterChange = (event) => {
+    setFilter(event.target.value);
   };
-  
-  handleDeleteContact = (contactId) => {
-    this.setState((prevState) => ({
-      contacts: prevState.contacts.filter((contact) => contact.id !== contactId),
-    }));
+
+  const handleDeleteContact = (contactId) => {
+    setContacts((prevContacts) => prevContacts.filter((contact) => contact.id !== contactId));
   };
-  
 
-  render() {
-    const { contacts, filter } = this.state;
-
-    // Filtruje kontakty na podstawie wprowadzonego filtra
-    const filteredContacts = contacts.filter((contact) =>
+  const filteredContacts = contacts.filter((contact) =>
     contact.name.toLowerCase().includes(filter.toLowerCase())
-    );
+  );
 
-    return (
-      <>
-        <h1>Phone Book</h1>
-        {/* Renderuje formularz do dodawania nowych kontaktów */}
-        <ContactForm onSubmit={this.handleAddContact} />
-        
-        <h2>Contacts</h2>
-        {/* Renderuje filtr do wybierania kontaktów */}
-        <Filter value={filter} onChange={this.handleFilterChange} />
-        <ContactList 
-          contacts={filteredContacts} 
-          onDeleteContact={this.handleDeleteContact}
-        />
-      </>
-    );
-  }
-}
+  return (
+    <div className={css.body}>
+      <h1>Phone Book</h1>
+      <ContactForm
+        name={name}
+        number={number}
+        onNameChange={(e) => setName(e.target.value)}
+        onNumberChange={(e) => setNumber(e.target.value)}
+        onSubmit={handleAddContact}
+      />
+
+      <h2>Contacts</h2>
+      <Filter value={filter} onChange={handleFilterChange} />
+      <ContactList contacts={filteredContacts} onDeleteContact={handleDeleteContact} />
+    </div>
+  );
+};
 
 export default App;
+
+

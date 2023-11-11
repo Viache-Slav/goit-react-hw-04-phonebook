@@ -1,15 +1,12 @@
 import React from 'react';
-import css from './contactList.module.css'
+import css from './contactList.module.css';
 import PropTypes from 'prop-types';
-
-const icon = "📳";
-
 
 const ContactList = ({ contacts, onDeleteContact }) => (
   <>
     {contacts.map((contact) => (
       <div key={contact.id}>
-        <span className={css.mobile-icon}>📳</span>
+        <span className={css.mobileIcon}>📳</span>
         <span className={css.name}>{`${contact.name}: `}</span>
         <span className={css.number}>{contact.number}</span>
         <button className={css.button} onClick={() => onDeleteContact(contact.id)}>
@@ -26,3 +23,7 @@ ContactList.propTypes = {
 };
 
 export default ContactList;
+
+
+
+
